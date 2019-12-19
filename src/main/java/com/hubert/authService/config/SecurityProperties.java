@@ -1,5 +1,6 @@
 package com.hubert.authService.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.core.io.Resource;
 
@@ -7,6 +8,9 @@ import org.springframework.core.io.Resource;
 public class SecurityProperties {
     private JwtProperties jwt;
 
+    public SecurityProperties() {
+    	setJwt(new JwtProperties());
+    }
     public JwtProperties getJwt() {
         return jwt;
     }

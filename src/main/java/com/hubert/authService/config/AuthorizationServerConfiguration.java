@@ -1,12 +1,16 @@
 package com.hubert.authService.config;
 
 import java.security.KeyPair;
+import java.security.PublicKey;
+import java.util.Base64;
 
 import javax.sql.DataSource;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,7 +33,9 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
     private final DataSource dataSource;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
-    private final SecurityProperties securityProperties;
+    
+    @Autowired
+    private SecurityProperties security;
     private final UserDetailsService userDetailsService;
 
     private JwtAccessTokenConverter jwtAccessTokenConverter;
@@ -41,7 +47,7 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
         this.dataSource = dataSource;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
-        this.securityProperties = securityProperties;
+        this.security = securityProperties;
         this.userDetailsService = userDetailsService;
     }
 
@@ -70,11 +76,10 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
             return jwtAccessTokenConverter;
         }
 
-        SecurityProperties.JwtProperties jwtProperties = securityProperties.getJwt();
-        KeyPair keyPair = keyPair(jwtProperties, keyStoreKeyFactory(jwtProperties));
+        //KeyPair keyPair = keyPair(jwtProperties, keyStoreKeyFactory(jwtProperties));
 
         jwtAccessTokenConverter = new JwtAccessTokenConverter();
-        jwtAccessTokenConverter.setKeyPair(keyPair);
+        jwtAccessTokenConverter.setAccessTokenConverter(accessTokenConverter());
         return jwtAccessTokenConverter;
     }
 
@@ -83,6 +88,16 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
         clients.jdbc(this.dataSource);
     }
 
+    @Bean
+    public JwtAccessTokenConverter accessTokenConverter() {
+        JwtAccessTokenConverter converter = new JwtAccessTokenConverter();
+        KeyStoreKeyFactory keyStoreKeyFactory = 
+          new KeyStoreKeyFactory(new ClassPathResource("anansemind.jks"), "anansemind".toCharArray());
+        converter.setKeyPair(keyStoreKeyFactory.getKeyPair("anansemind"));
+        PublicKey pubKey = keyStoreKeyFactory.getKeyPair("anansemind", "anansemind".toCharArray()).getPublic();
+        return converter;
+    }
+    
     @Override
     public void configure(final AuthorizationServerEndpointsConfigurer endpoints) {
         endpoints.authenticationManager(this.authenticationManager)
@@ -98,10 +113,12 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
     }
 
     private KeyPair keyPair(SecurityProperties.JwtProperties jwtProperties, KeyStoreKeyFactory keyStoreKeyFactory) {
+    	System.out.println(jwtProperties.getKeyPairAlias());
         return keyStoreKeyFactory.getKeyPair(jwtProperties.getKeyPairAlias(), jwtProperties.getKeyPairPassword().toCharArray());
     }
 
     private KeyStoreKeyFactory keyStoreKeyFactory(SecurityProperties.JwtProperties jwtProperties) {
+    	System.out.println(jwtProperties.getKeyStore());
         return new KeyStoreKeyFactory(jwtProperties.getKeyStore(), jwtProperties.getKeyStorePassword().toCharArray());
     }
 }

@@ -49,7 +49,7 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Bean
     public UserDetailsService userDetailsService() {
     	InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
-    	 manager.createUser(User.withUsername("user").password("password").authorities("USER").build());
+    	 manager.createUser(User.withUsername("user").password("password").authorities("ROLE_USER").build());
 //        if (userDetailsService == null) {
 //            userDetailsService = new JdbcDaoImpl();
 //            ((JdbcDaoImpl) userDetailsService).setDataSource(dataSource);

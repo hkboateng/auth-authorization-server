@@ -85,7 +85,11 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
 
     @Override
     public void configure(final ClientDetailsServiceConfigurer clients) throws Exception {
-        clients.jdbc(this.dataSource);
+        clients.jdbc(this.dataSource).withClient("platform").accessTokenValiditySeconds(30)				
+	        .authorizedGrantTypes("authorization_code", "refresh_token", "client_credentials", "password")
+			.scopes("message.read", "message.write")
+			.secret("{noop}secret")
+			.redirectUris("http://localhost:8080/authResource/security/authorized");
     }
 
     @Bean
@@ -94,7 +98,7 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
         KeyStoreKeyFactory keyStoreKeyFactory = 
           new KeyStoreKeyFactory(new ClassPathResource("anansemind.jks"), "anansemind".toCharArray());
         converter.setKeyPair(keyStoreKeyFactory.getKeyPair("anansemind"));
-        PublicKey pubKey = keyStoreKeyFactory.getKeyPair("anansemind", "anansemind".toCharArray()).getPublic();
+        //PublicKey pubKey = keyStoreKeyFactory.getKeyPair("anansemind", "anansemind".toCharArray()).getPublic();
         return converter;
     }
     
@@ -112,13 +116,17 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
                 .checkTokenAccess("isAuthenticated()");
     }
 
-    private KeyPair keyPair(SecurityProperties.JwtProperties jwtProperties, KeyStoreKeyFactory keyStoreKeyFactory) {
-    	System.out.println(jwtProperties.getKeyPairAlias());
-        return keyStoreKeyFactory.getKeyPair(jwtProperties.getKeyPairAlias(), jwtProperties.getKeyPairPassword().toCharArray());
-    }
-
-    private KeyStoreKeyFactory keyStoreKeyFactory(SecurityProperties.JwtProperties jwtProperties) {
-    	System.out.println(jwtProperties.getKeyStore());
-        return new KeyStoreKeyFactory(jwtProperties.getKeyStore(), jwtProperties.getKeyStorePassword().toCharArray());
-    }
+	/*
+	 * private KeyPair keyPair(SecurityProperties.JwtProperties jwtProperties,
+	 * KeyStoreKeyFactory keyStoreKeyFactory) {
+	 * 
+	 * return keyStoreKeyFactory.getKeyPair(jwtProperties.getKeyPairAlias(),
+	 * jwtProperties.getKeyPairPassword().toCharArray()); }
+	 * 
+	 * private KeyStoreKeyFactory
+	 * keyStoreKeyFactory(SecurityProperties.JwtProperties jwtProperties) {
+	 * 
+	 * return new KeyStoreKeyFactory(jwtProperties.getKeyStore(),
+	 * jwtProperties.getKeyStorePassword().toCharArray()); }
+	 */
 }
